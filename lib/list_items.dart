@@ -43,7 +43,13 @@ class ContactItem implements ListItem {
   Widget buildTitle(BuildContext context) =>
       Text(data.name + " " + data.surname);
 
-  Widget buildSubtitle(BuildContext context) => Text(data.company);
+  Widget buildSubtitle(BuildContext context) {
+    if (data.company.isNotEmpty) {
+      return Text(data.company);
+    }
+
+    return null;
+  }
 
   @override
   Widget buildIcon(BuildContext context, GestureTapCallback onTap) {
