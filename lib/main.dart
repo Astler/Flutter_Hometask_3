@@ -4,7 +4,6 @@ import 'contact_info_screen.dart';
 import 'contacts_data.dart';
 import 'list_items.dart';
 
-
 void main() {
   runApp(MyApp());
 }
@@ -35,21 +34,20 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var _rawList = ContactsDataModel().getContacts();
-
-  List<ListItem> getSortedList() {
+  List<ListItem> getSortedList(List<ContactData> rawList) {
     var _newRawList = List<ListItem>.empty(growable: true);
 
-    _rawList.sort((a, b) => a.surname.toLowerCase().compareTo(b.surname.toLowerCase()));
+    rawList.sort(
+        (a, b) => a.surname.toLowerCase().compareTo(b.surname.toLowerCase()));
 
-    var firstLetter = _rawList.first.surname[0].toLowerCase();
+    var firstLetter = rawList.first.surname[0].toLowerCase();
 
     var _byLetterArray = List<ContactData>.empty(growable: true);
 
-    for (var contactData in _rawList) {
+    for (var contactData in rawList) {
       var contactFirstLetter = contactData.surname[0].toLowerCase();
 
-      if (firstLetter != contactFirstLetter || _rawList.last == contactData) {
+      if (firstLetter != contactFirstLetter || rawList.last == contactData) {
         if (firstLetter != contactFirstLetter) {
           _newRawList.add(HeaderItem(firstLetter.toUpperCase()));
           firstLetter = contactFirstLetter;
@@ -58,8 +56,8 @@ class _MyHomePageState extends State<MyHomePage> {
           _byLetterArray.add(contactData);
         }
 
-        _byLetterArray
-            .sort((first, second) => first.name.toLowerCase().compareTo(second.name.toLowerCase()));
+        _byLetterArray.sort((first, second) =>
+            first.name.toLowerCase().compareTo(second.name.toLowerCase()));
 
         _byLetterArray.forEach((element) {
           _newRawList.add(ContactItem(element));
@@ -74,12 +72,10 @@ class _MyHomePageState extends State<MyHomePage> {
     return _newRawList;
   }
 
-  var sortedList = List.empty(growable: true);
+  var contactsBloc = ContactsBloc();
 
   void _reloadList() {
-    setState(() {
-      sortedList = getSortedList();
-    });
+    setState(() {});
   }
 
   _navigateUpdateData(BuildContext context, ContactData item) async {
@@ -87,53 +83,72 @@ class _MyHomePageState extends State<MyHomePage> {
       context,
       ContactInfoScreen.routeName,
       arguments: ContactInfoArguments(
-        item.id,
-      ),
-    );
-
-    _reloadList();
+          item.id,
+          item.name,
+          item.surname,
+          item.company,
+          item.handle,
+          item.bio,
+          item.mobile,
+          item.iconName,
+          item.isFavorite),
+    ).then((value) {
+      if (value is ContactData) {
+        contactsBloc.updateContact(value);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    sortedList = getSortedList();
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                  itemCount: sortedList.length,
-                  itemBuilder: (_, index) {
-                    final item = sortedList[index];
+        body: StreamBuilder<Map<int, ContactData>>(
+            stream: contactsBloc.contactsStream,
+            initialData: Map.identity(),
+            builder: (context, snapshot) {
+              print("do something?");
+              final contactsData = snapshot.data.values.toList();
+              print(contactsData.length.toString());
+              if (contactsData == null || contactsData.isEmpty)
+                return Text("No Contacts");
 
-                    return GestureDetector(
-                      onTap: () => {
-                        if (item is ContactItem)
-                          {
-                            _navigateUpdateData(context, item.data)
-                          },
-                      },
-                      child: ListTile(
-                        title: item.buildTitle(context),
-                        subtitle: item.buildSubtitle(context),
-                        leading: item.buildIcon(
-                            context,
-                            () => {
-                                  if (item is ContactItem)
-                                    {
-                                      item.data.isFavorite =
-                                          !item.data.isFavorite
-                                    },
-                                  _reloadList()
-                                }), //Icon(Icons.star_border, color: Colors.blue),
-                      ),
-                    );
-                  }),
-            ),
-          ],
-        ));
+              var sortedList = getSortedList(contactsData);
+
+              return Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                        itemCount: sortedList.length,
+                        itemBuilder: (_, index) {
+                          final item = sortedList[index];
+
+                          return GestureDetector(
+                            onTap: () => {
+                              if (item is ContactItem)
+                                {_navigateUpdateData(context, item.data)},
+                            },
+                            child: ListTile(
+                              title: item.buildTitle(context),
+                              subtitle: item.buildSubtitle(context),
+                              leading: item.buildIcon(
+                                  context,
+                                  () => {
+                                        if (item is ContactItem)
+                                          {
+                                            item.data.isFavorite =
+                                                !item.data.isFavorite
+                                          },
+                                        _reloadList()
+                                      }), //Icon(Icons.star_border, color: Colors.blue),
+                            ),
+                          );
+                        }),
+                  ),
+                ],
+              );
+            }));
   }
 }

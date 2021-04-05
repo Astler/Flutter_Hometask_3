@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 class ContactData {
@@ -11,51 +12,71 @@ class ContactData {
   String mobile;
   bool isFavorite;
 
-  ContactData(this.id, this.name, this.surname, this.company, this.iconName, this.handle, this.bio, this.mobile,
-      this.isFavorite);
+  ContactData(this.id, this.name, this.surname, this.company, this.iconName,
+      this.handle, this.bio, this.mobile, this.isFavorite);
 }
 
-var contactsDataStatic = List<ContactData>.empty(growable: true);
+class ContactsBloc {
+  Map<int, ContactData> _contacts;
 
-var map = Map<int, ContactData>.identity();
+  Map<int, ContactData> get getContacts => _contacts;
 
-class ContactsDataModel {
-  List<ContactData> getContacts() {
-    if (map.isEmpty) {
-      var contactsData = List<ContactData>.empty(growable: true);
+  final _contactsController = StreamController<Map<int, ContactData>>();
+  StreamController _actionController = StreamController();
 
-      contactsData = List<ContactData>.generate(50, (index) {
-        var name = namesPool[Random().nextInt(namesPool.length)];
-        var surname = surnamesPool[Random().nextInt(surnamesPool.length)];
-        return ContactData(
-            index,
-            name,
-            surname,
-            companiesPool[Random().nextInt(companiesPool.length)],
-            photosPool[Random().nextInt(photosPool.length)],
-            "@${name.toLowerCase()}_${surname.toLowerCase()[0]}",
-            "",
-            "+380955626888",
-            Random().nextInt(3) == 1);
-      });
-
-      contactsData.forEach((element) {
-        map[element.id] = element;
-      });
-    }
-
-    return map.values.toList();
+  ContactsBloc() {
+    generateExampleUserData();
+    _actionController.stream.listen(_updateContactsList);
   }
 
-  Map<int, ContactData> getUsersMap() {
-    return map;
+  Stream<Map<int, ContactData>> get contactsStream =>
+      _contactsController.stream;
+
+  Map<int, ContactData> generateExampleUserData() {
+    var map = Map<int, ContactData>.identity();
+
+    List<ContactData>.generate(50, (index) {
+      var name = namesPool[Random().nextInt(namesPool.length)];
+      var surname = surnamesPool[Random().nextInt(surnamesPool.length)];
+      return ContactData(
+          index,
+          name,
+          surname,
+          companiesPool[Random().nextInt(companiesPool.length)],
+          photosPool[Random().nextInt(photosPool.length)],
+          "@${name.toLowerCase()}_${surname.toLowerCase()[0]}",
+          "",
+          "+380955626888",
+          Random().nextInt(3) == 1);
+    }).forEach((element) {
+      map[element.id] = element;
+    });
+
+    _contacts = map;
+    _contactsController.sink.add(_contacts);
   }
 
-  void updateUserById(int id, ContactData data) {
-    if (map.containsKey(id)) {
-      map[id] = data;
-    }
+  updateContact(ContactData value) {
+    getContacts[value.id] = value;
+    _contactsController.sink.add(_contacts);
   }
+
+  _updateContactsList(data) {
+    print("UPDATE?");
+    _contactsController.sink.add(_contacts);
+  }
+
+  void dispose() {
+    _actionController.close();
+    _contactsController.close();
+  }
+
+
+// void updateUserById(int id, ContactData data) {
+//   if (map.containsKey(id)) {
+//     map[id] = data;
+//   }
+// }
 }
 
 var namesPool = [

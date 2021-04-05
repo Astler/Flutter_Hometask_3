@@ -4,20 +4,22 @@ import 'contacts_data.dart';
 
 class ContactInfoArguments {
   final int id;
+  final String name;
+  final String surname;
+  final String company;
+  final String handle;
+  final String bio;
+  final String mobile;
+  final String icon;
+  final bool isFavorite;
 
-  ContactInfoArguments(this.id);
+  ContactInfoArguments(this.id, this.name, this.surname, this.company,
+      this.handle, this.bio, this.mobile, this.icon, this.isFavorite);
 }
 
-class ContactInfoScreen extends StatefulWidget {
+class ContactInfoScreen extends StatelessWidget {
   static const routeName = '/contact_data';
 
-  ContactInfoScreen({Key key}) : super(key: key);
-
-  @override
-  _ContactInfoScreenState createState() => _ContactInfoScreenState();
-}
-
-class _ContactInfoScreenState extends State<ContactInfoScreen> {
   final nameController = TextEditingController();
   final surnameController = TextEditingController();
   final companyNameController = TextEditingController();
@@ -37,19 +39,22 @@ class _ContactInfoScreenState extends State<ContactInfoScreen> {
     final _bioKey = GlobalKey<FormFieldState>();
 
     if (args != null) {
-      var dataModel = ContactsDataModel();
-
-      var usersMap = dataModel.getUsersMap();
-
       var userId = args.id;
-      ContactData userData = usersMap[userId];
+      var userName = args.name;
+      var userSurname = args.surname;
+      var userCompany = args.company;
+      var userHandle = args.handle;
+      var userBio = args.bio;
+      var userMobile = args.mobile;
+      var userIcon = args.icon;
+      var userIsFavorite = args.isFavorite;
 
-      nameController.text = userData.name;
-      surnameController.text = userData.surname;
-      companyNameController.text = userData.company;
-      handleController.text = userData.handle;
-      bioController.text = userData.bio;
-      mobileController.text = userData.mobile;
+      nameController.text = userName;
+      surnameController.text = userSurname;
+      companyNameController.text = userCompany;
+      handleController.text = userHandle;
+      bioController.text = userBio;
+      mobileController.text = userMobile;
 
       return Scaffold(
           appBar: AppBar(
@@ -65,14 +70,10 @@ class _ContactInfoScreenState extends State<ContactInfoScreen> {
                     return;
                   }
 
-                  userData.name = nameController.text;
-                  userData.surname = surnameController.text;
-                  userData.company = companyNameController.text;
-                  userData.handle = handleController.text;
-                  userData.mobile = mobileController.text;
-                  userData.bio = bioController.text;
-                  dataModel.updateUserById(userId, userData);
-                  Navigator.pop(context);
+                  Navigator.pop(
+                      context,
+                      ContactData(userId, nameController.text, surnameController.text, companyNameController.text, userIcon, handleController.text,
+                          bioController.text, mobileController.text, userIsFavorite));
                 },
                 child: Text("Save"),
                 shape:
@@ -81,140 +82,139 @@ class _ContactInfoScreenState extends State<ContactInfoScreen> {
             ],
           ),
           body: SingleChildScrollView(
-            child: Column(children: [
-              Center(
-                child: Container(
-                  margin: EdgeInsets.only(top: 40, bottom: 16),
-                  width: 150.0,
-                  height: 150.0,
-                  decoration: new BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.5),
-                        spreadRadius: 5,
-                        blurRadius: 7,
-                        offset: Offset(0, 3), // changes position of shadow
-                      ),
-                    ],
-                    image: new DecorationImage(
-                      image: AssetImage(userData?.iconName),
-                      fit: BoxFit.cover,
+              child: Column(children: [
+            Center(
+              child: Container(
+                margin: EdgeInsets.only(top: 40, bottom: 16),
+                width: 150.0,
+                height: 150.0,
+                decoration: new BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.5),
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: Offset(0, 3), // changes position of shadow
                     ),
-                    borderRadius:
-                        new BorderRadius.all(new Radius.circular(100.0)),
-                    border: new Border.all(
-                      color: Colors.white,
-                      width: 5.0,
-                    ),
+                  ],
+                  image: new DecorationImage(
+                    image: AssetImage(userIcon),
+                    fit: BoxFit.cover,
+                  ),
+                  borderRadius:
+                      new BorderRadius.all(new Radius.circular(100.0)),
+                  border: new Border.all(
+                    color: Colors.white,
+                    width: 5.0,
                   ),
                 ),
               ),
-              SimpleEditFieldWidget(
-                editKey: _nameKey,
-                controller: nameController,
-                upperText: 'Name ',
-                hintText: "Contact name",
-                isImportant: true,
-                validation: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Name can\'t be empty!';
-                  }
+            ),
+            SimpleEditFieldWidget(
+              editKey: _nameKey,
+              controller: nameController,
+              upperText: 'Name ',
+              hintText: "Contact name",
+              isImportant: true,
+              validation: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Name can\'t be empty!';
+                }
 
-                  if (value.length > 70) {
-                    return 'Max name length is 70 letters!';
-                  }
+                if (value.length > 70) {
+                  return 'Max name length is 70 letters!';
+                }
 
-                  return null;
-                },
-              ),
-              SimpleEditFieldWidget(
-                editKey: _surnameKey,
-                controller: surnameController,
-                upperText: 'Surname ',
-                hintText: "Contact surname",
-                isImportant: true,
-                validation: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Surname can\'t be empty!';
-                  }
+                return null;
+              },
+            ),
+            SimpleEditFieldWidget(
+              editKey: _surnameKey,
+              controller: surnameController,
+              upperText: 'Surname ',
+              hintText: "Contact surname",
+              isImportant: true,
+              validation: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Surname can\'t be empty!';
+                }
 
-                  if (value.length > 70) {
-                    return 'Max name length is 70 letters!';
-                  }
+                if (value.length > 70) {
+                  return 'Max name length is 70 letters!';
+                }
 
-                  return null;
-                },
-              ),
-              SimpleEditFieldWidget(
-                editKey: _handleKey,
-                controller: handleController,
-                upperText: 'Profile handle ',
-                hintText: "Contact handle",
-                isImportant: true,
-                exampleText:
-                    "example:${nameController.text.toLowerCase()}_${surnameController.text.toLowerCase()}",
-                validation: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Handle can\'t be empty!';
-                  }
+                return null;
+              },
+            ),
+            SimpleEditFieldWidget(
+              editKey: _handleKey,
+              controller: handleController,
+              upperText: 'Profile handle ',
+              hintText: "Contact handle",
+              isImportant: true,
+              exampleText:
+                  "example:${nameController.text.toLowerCase()}_${surnameController.text.toLowerCase()}",
+              validation: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Handle can\'t be empty!';
+                }
 
-                  if (value == "@") {
-                    return 'Incorrect handle: @!';
-                  }
+                if (value == "@") {
+                  return 'Incorrect handle: @!';
+                }
 
-                  if (value[0] != "@") {
-                    return 'Handle should start with @!';
-                  }
+                if (value[0] != "@") {
+                  return 'Handle should start with @!';
+                }
 
-                  return null;
-                },
-              ),
-              SimpleEditFieldWidget(
-                editKey: _phoneKey,
-                controller: mobileController,
-                upperText: 'Mobile ',
-                hintText: "Contact mobile",
-                isImportant: false,
-                validation: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Phone number can\'t be empty!';
-                  }
+                return null;
+              },
+            ),
+            SimpleEditFieldWidget(
+              editKey: _phoneKey,
+              controller: mobileController,
+              upperText: 'Mobile ',
+              hintText: "Contact mobile",
+              isImportant: false,
+              validation: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Phone number can\'t be empty!';
+                }
 
-                  if (!value.startsWith("+38")) {
-                    return 'You should input phone number in format: +38XXXXXXXXXX';
-                  }
+                if (!value.startsWith("+38")) {
+                  return 'You should input phone number in format: +38XXXXXXXXXX';
+                }
 
-                  if (value.length != 13) {
-                    return 'Incorrect phone number. Did you miss something?';
-                  }
+                if (value.length != 13) {
+                  return 'Incorrect phone number. Did you miss something?';
+                }
 
-                  return null;
-                },
-              ),
-              SimpleEditFieldWidget(
-                  controller: companyNameController,
-                  upperText: 'Company ',
-                  hintText: "Contact company",
-                  isImportant: false),
-              SimpleEditFieldWidget(
-                editKey: _bioKey,
-                controller: bioController,
-                upperText: 'Bio ',
-                hintText: "Contact bio",
-                isImportant: false,
-                exampleText: "maximum of 110 letters",
-                multilineText: true,
-                validation: (value) {
-                  if (value.length > 110) {
-                    return 'Bio name length is 110 letters!';
-                  }
+                return null;
+              },
+            ),
+            SimpleEditFieldWidget(
+                controller: companyNameController,
+                upperText: 'Company ',
+                hintText: "Contact company",
+                isImportant: false),
+            SimpleEditFieldWidget(
+              editKey: _bioKey,
+              controller: bioController,
+              upperText: 'Bio ',
+              hintText: "Contact bio",
+              isImportant: false,
+              exampleText: "maximum of 110 letters",
+              multilineText: true,
+              validation: (value) {
+                if (value.length > 110) {
+                  return 'Bio name length is 110 letters!';
+                }
 
-                  return null;
-                },
-              ),
-              Container(margin: EdgeInsets.all(32))
-            ]),
-          ));
+                return null;
+              },
+            ),
+            Container(margin: EdgeInsets.all(32))
+          ])));
     } else {
       return Scaffold(
         appBar: AppBar(
@@ -294,38 +294,24 @@ class SimpleEditFieldWidget extends StatelessWidget {
             maxLines: multilineText ? null : 1,
             controller: controller,
             decoration: InputDecoration(
-              hintText: hintText,
-              fillColor: Colors.white,
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: BorderSide(
-                  color: Colors.red,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: BorderSide(
-                  color: Colors.redAccent,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: BorderSide(
-                  color: Colors.grey,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: BorderSide(
-                  color: Colors.grey[300],
-                  width: 1.0,
-                ),
-              ),
-            ),
+                hintText: hintText,
+                fillColor: Colors.white,
+                focusedErrorBorder: getColoredBorder(Colors.red),
+                errorBorder: getColoredBorder(Colors.redAccent),
+                focusedBorder: getColoredBorder(Colors.grey),
+                enabledBorder: getColoredBorder(Colors.grey[300])),
             validator: validation,
           ),
         ),
       ],
     );
   }
+}
+
+OutlineInputBorder getColoredBorder(Color color) {
+  return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8.0),
+      borderSide: BorderSide(
+        color: color,
+      ));
 }
